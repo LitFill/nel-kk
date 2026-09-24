@@ -122,6 +122,54 @@ Outputs:
 - `result/share/koka/3.2.9/nonempty.kk` — source module
 - `result/lib/koka/3.2.9/nonempty/` — compiled `.c`, `.h`, `.o` files
 
+## Editor / LSP Setup
+
+The Koka language server (`koka --language-server`) resolves imports via `-i`/`KOKA_PATH`. For reliable goto-definition, vendor the source locally so the LSP sees it as a project file:
+
+```bash
+nix develop github:youruser/non-empty-list -c bash -c '
+  mkdir -p vendor
+  ln -sf $nonEmptyLib/share/koka/3.2.9 vendor/nonempty
+'
+```
+
+This creates `vendor/nonempty/nonempty.kk` — a local symlink the LSP can index. Configure your editor to run the language server with the same include path:
+
+```json
+// .vscode/settings.json (VS Code with koka-language-server)
+{
+  "koka.serverArgs": [
+    "--language-server",
+    "-i", "${workspaceFolder}/vendor",
+    "-i", "${workspaceFolder}"
+  ]
+}
+```
+
+Or for other editors, ensure the language server starts with `-i vendor -i .`.
+
+### Why not `-i` the flake store path directly?
+
+The LSP can resolve imports from the Nix store, but goto-definition often fails because the store path is read-only and outside the workspace. Vendoring gives the LSP a local, writable target for navigation.
+
+### Minimal devShell addition
+
+Add this to your project's `flake.nix` for automatic vendoring:
+
+```nix
+devShells.default = pkgs.mkShell {
+  packages = [ pkgs.koka nonempty.packages.nonEmptyLib ];
+  shellHook = ''
+    if [ ! -L vendor/nonempty ]; then
+      mkdir -p vendor
+      ln -s ${nonempty.packages.nonEmptyLib}/share/koka/3.2.9 vendor/nonempty
+    fi
+    export KOKA_PATH="${pkgs.koka}/share/koka/3.2.9:${nonempty.packages.nonEmptyLib}/share/koka/3.2.9:vendor"
+    echo "Run: koka -i vendor my-app.kk -o my-app"
+  '';
+};
+```
+
 ## Requirements
 
 - Koka compiler ≥ 3.2.9
