@@ -374,28 +374,6 @@ pub fun lookup(ne : non-empty<(k, v)>, pred : k -> e bool) : e maybe<v>
 /// Join string elements with a separator appended after each.
 pub fun join-end(ne : non-empty<string>, end : string) : string
   ne.head ++ end ++ ne.tail.join-end(end)
-
-/// Function utility: gather spreads a tuple argument.
-pub fun function/gather(action : (f : (a : a, b : b) -> e c) -> e d, body : (p : (a, b)) -> e c) : e d
-  action(spread(body))
-
-pub fun function/spread(f : (p : (a, b)) -> e c) : ((a : a, b : b) -> e c)
-  fn(a, b) f((a, b))
-
-/// Three-argument gather/spread.
-pub fun function/three/gather(action : (f : (a, b, c) -> e d) -> e f, body : (t : (a, b, c)) -> e d) : e f
-  action(three/spread(body))
-
-pub fun function/three/spread(f : (t : (a, b, c)) -> e d) : ((a : a, b : b, c : c) -> e d)
-  fn(a, b, c) f((a, b, c))
-
-/// Test helper for gather.
-fun test-gather()
-  with p <- gather(list('a', 'z').foreach-indexed(_))
-  val (ix, x) = p
-  (ix + 1).show.pad-left(3).print; ": ".print
-  [x].string.println
-
 /// Entry point.
 fun main()
   "Hello, Koka!"
