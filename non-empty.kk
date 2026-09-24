@@ -22,6 +22,7 @@ pub fun (<::)(x, ne) cons(x, ne)
 pub fun list(ne : non-empty<a>) : list<a>
   Cons(ne.head, ne.tail)
 
+/// Convert a maybe non-empty to a regular list (empty if Nothing).
 pub fun maybe/list(mne : maybe<non-empty<a>>) : list<a>
   match mne
     Nothing -> []
