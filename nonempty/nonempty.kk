@@ -2,42 +2,42 @@ module nonempty
 
 pub infixr 5 (<::)
 
-// Non-empty list type with at least one element.
+// nonempty list type with at least one element.
 // The head is always present; tail is a regular list that may be empty.
-pub struct non-empty<a>
+pub struct nonempty<a>
   head : a
   tail : list<a>
 
-// Construct a non-empty list from a single element.
-pub fun single(x) Non-empty(x, [])
+// Construct a nonempty list from a single element.
+pub fun single(x) Nonempty(x, [])
 
-// Prepend an element to a non-empty list.
-pub fun cons(x : a, ne : non-empty<a>) : non-empty<a>
-  Non-empty(x, ne.list)
+// Prepend an element to a nonempty list.
+pub fun cons(x : a, ne : nonempty<a>) : nonempty<a>
+  Nonempty(x, ne.list)
 
 // Infix operator for prepending. Right-associative with precedence 5.
 pub fun (<::)(x, ne) cons(x, ne)
 
 // Convert to a regular list.
-pub fun list(ne : non-empty<a>) : list<a>
+pub fun list(ne : nonempty<a>) : list<a>
   Cons(ne.head, ne.tail)
 
-/// Convert a maybe non-empty to a regular list (empty if Nothing).
-pub fun maybe/list(mne : maybe<non-empty<a>>) : list<a>
+/// Convert a maybe nonempty to a regular list (empty if Nothing).
+pub fun maybe/list(mne : maybe<nonempty<a>>) : list<a>
   match mne
     Nothing -> []
     Just(ne) -> ne.list
 
 // Number of elements. Always at least 1.
-pub fun length(ne : non-empty<a>) : int
+pub fun length(ne : nonempty<a>) : int
   ne.tail.length + 1
 
 // The last element.
-pub fun last(ne : non-empty<a>) : a
+pub fun last(ne : nonempty<a>) : a
   ne.tail.last.default(ne.head)
 
 // All elements except the last. Returns a regular list for it may be empty.
-pub fun init(ne : non-empty<a>) : list<a>
+pub fun init(ne : nonempty<a>) : list<a>
   ne.list.init
 
 // Split a list into (init, last) or Nothing if empty.
@@ -56,87 +56,87 @@ pub fun list/unsnoc'(xs : list<a>) : maybe2<list<a>, a>
       Nothing2 -> Just2(Nil, x)
       Just2(ys, y) -> Just2(Cons(x, ys), y)
 
-// Deconstruct into head and optional tail as non-empty.
-// Returns (head, Just(tail)) if tail non-empty, else (head, Nothing).
-pub fun uncons(ne : non-empty<a>) : (a, maybe<non-empty<a>>)
-  (ne.head, ne.tail.non-empty)
+// Deconstruct into head and optional tail as nonempty.
+// Returns (head, Just(tail)) if tail nonempty, else (head, Nothing).
+pub fun uncons(ne : nonempty<a>) : (a, maybe<nonempty<a>>)
+  (ne.head, ne.tail.nonempty)
 
 // Deconstruct into optional init and last.
 // Returns (Nothing, last) for single-element, else (Just(init), last).
-pub fun unsnoc(ne : non-empty<a>) : (maybe<list<a>>, a)
+pub fun unsnoc(ne : nonempty<a>) : (maybe<list<a>>, a)
   match ne.tail.unsnoc
     Nothing -> (Nothing, ne.head)
     Just((xs, x)) -> (ne.head.Cons(xs).Just, x)
 
 // Structural equality.
-pub fun eq(no__derived_eq_1 : non-empty<a>, no__derived_eq_2 : non-empty<a>, ?a/(==) : (a, a) -> bool)
+pub fun eq(no__derived_eq_1 : nonempty<a>, no__derived_eq_2 : nonempty<a>, ?a/(==) : (a, a) -> bool)
   no__derived_eq_1.head == no__derived_eq_2.head
   && no__derived_eq_1.tail == no__derived_eq_2.tail
 
 // Infix structural equality.
-pub fun (==)(x : non-empty<a>, y : non-empty<a>, ?a/(==) : (a, a) -> bool)
+pub fun (==)(x : nonempty<a>, y : nonempty<a>, ?a/(==) : (a, a) -> bool)
   nonempty/eq(x, y)
 
 // Show instance.
-pub fun show(no__derived_show : non-empty<a>, ?a/show : a -> string)
-  "Non-empty("
+pub fun show(no__derived_show : nonempty<a>, ?a/show : a -> string)
+  "nonempty("
   ++ "head=" ++ no__derived_show.head.show ++ ", "
   ++ "tail=" ++ no__derived_show.tail.show()
   ++ ")"
 
 // Map a function over all elements.
-pub fun map(ne : non-empty<a>, f : a -> e b) : e non-empty<b>
-  Non-empty(ne.head.f, ne.tail.map(f))
+pub fun map(ne : nonempty<a>, f : a -> e b) : e nonempty<b>
+  Nonempty(ne.head.f, ne.tail.map(f))
 
 // Map a function over all elements with their index.
-pub fun map-indexed(ne : non-empty<a>, f : (ix : int, x : a) -> e b) : e non-empty<b>
-  Non-empty( head = f(0, ne.head)
+pub fun map-indexed(ne : nonempty<a>, f : (ix : int, x : a) -> e b) : e nonempty<b>
+  Nonempty( head = f(0, ne.head)
            , tail = ne.tail.map-indexed fn(i, x) f(i + 1, x))
 
 // Left fold with initial accumulator.
-pub fun foldl(ne : non-empty<a>, z : b, f : (b, a) -> e b) : e b
+pub fun foldl(ne : nonempty<a>, z : b, f : (b, a) -> e b) : e b
   ne.tail.foldl(f(z, ne.head), f)
 
 // Left fold with no initial accumulator (uses head as initial).
-pub fun foldl1(ne : non-empty<a>, f : (a, a) -> e a) : e a
+pub fun foldl1(ne : nonempty<a>, f : (a, a) -> e a) : e a
   ne.tail.foldl(ne.head, f)
 
 // Right fold with initial accumulator.
-pub fun foldr(ne : non-empty<a>, z : b, f : (a, b) -> e b) : e b
+pub fun foldr(ne : nonempty<a>, z : b, f : (a, b) -> e b) : e b
   ne.list.foldr(z, f)
 
 // Right fold with no initial accumulator.
-pub fun foldr1(ne : non-empty<a>, f : (a, a) -> e a) : e a
+pub fun foldr1(ne : nonempty<a>, f : (a, a) -> e a) : e a
   match ne.unsnoc
     (Nothing, last)  -> last
     (Just(xs), last) -> xs.foldr(last, f)
 
-// Left scan: returns non-empty list of intermediate accumulators including initial.
-pub fun scanl(ne : non-empty<a>, z : b, f : (b, a) -> e b) : e non-empty<b>
-  Non-empty(z, ne.tail.scanl(f(z, ne.head), f))
+// Left scan: returns nonempty list of intermediate accumulators including initial.
+pub fun scanl(ne : nonempty<a>, z : b, f : (b, a) -> e b) : e nonempty<b>
+  Nonempty(z, ne.tail.scanl(f(z, ne.head), f))
 
-// Right scan: returns non-empty list of intermediate accumulators including initial.
-pub fun scanr(ne : non-empty<a>, z : b, f : (a, b) -> e b) : e non-empty<b>
+// Right scan: returns nonempty list of intermediate accumulators including initial.
+pub fun scanr(ne : nonempty<a>, z : b, f : (a, b) -> e b) : e nonempty<b>
   val xs = ne.tail.scanr(z, f)
-  Non-empty(
+  Nonempty(
     head = f(ne.head, xs.head(z)),
     // Koka cannot infer scans never produce empty list
     tail = xs
   )
 
 // Left scan with no initial accumulator (uses head as initial).
-pub fun one/scanl(ne : non-empty<a>, f : (a, a) -> e a) : e non-empty<a>
+pub fun one/scanl(ne : nonempty<a>, f : (a, a) -> e a) : e nonempty<a>
   val xs = ne.tail.scanl(ne.head, f)
-  Non-empty(
+  Nonempty(
     head = xs.head(ne.head),
     // Koka cannot infer scans never produce empty list
     tail = xs.tail
   )
 
 // Right scan with no initial accumulator.
-pub fun one/scanr(ne : non-empty<a>, f : (a, a) -> e a) : e non-empty<a>
+pub fun one/scanr(ne : nonempty<a>, f : (a, a) -> e a) : e nonempty<a>
   val xs = ne.tail.scanr(ne.head, f)
-  Non-empty(
+  Nonempty(
     head = xs.head(ne.head),
     // Koka cannot infer scans never produce empty list
     tail = xs.tail
@@ -157,46 +157,46 @@ pub fun list/scanr(xs : list<a>, z : b, f : (a, b) -> e b) : e list<b>
       f(x, qs.head(z)).Cons(qs)
 
 // Apply an action to each element for effect.
-pub fun foreach(ne : non-empty<a>, action : a -> e ()) : e ()
+pub fun foreach(ne : nonempty<a>, action : a -> e ()) : e ()
   ne.list.foreach(action)
 
 // Apply an action to each element with its index for effect.
-pub fun foreach-indexed(ne : non-empty<a>, action : (ix : int, x : a) -> e ()) : e ()
+pub fun foreach-indexed(ne : nonempty<a>, action : (ix : int, x : a) -> e ()) : e ()
   ne.list.foreach-indexed(action)
 
 // Apply an action to each element until it returns Just.
-pub fun foreach-while(ne : non-empty<a>, action : a -> e maybe<b>) : e maybe<b>
+pub fun foreach-while(ne : nonempty<a>, action : a -> e maybe<b>) : e maybe<b>
   ne.list.foreach-while(action)
 
-// Append a list to a non-empty list.
-pub fun list/append(ne : non-empty<a>, xs : list<a>) : non-empty<a>
+// Append a list to a nonempty list.
+pub fun list/append(ne : nonempty<a>, xs : list<a>) : nonempty<a>
   ne(tail = ne.tail ++ xs)
 
 // Infix operator for appending a list.
-pub fun list/(++)(ne : non-empty<a>, xs : list<a>) : non-empty<a>
+pub fun list/(++)(ne : nonempty<a>, xs : list<a>) : nonempty<a>
   append(ne, xs)
 
-// Append two non-empty lists.
-pub fun append(n : non-empty<a>, m : non-empty<a>) : non-empty<a>
+// Append two nonempty lists.
+pub fun append(n : nonempty<a>, m : nonempty<a>) : nonempty<a>
   n(tail = n.tail ++ m.list)
 
-// Infix operator for appending two non-empty lists.
-pub fun (++)(n : non-empty<a>, m : non-empty<a>) : non-empty<a>
+// Infix operator for appending two nonempty lists.
+pub fun (++)(n : nonempty<a>, m : nonempty<a>) : nonempty<a>
   append(n, m)
 
-// Prepend a list to a non-empty list.
-pub fun list/prepend(xs : list<a>, ne : non-empty<a>) : non-empty<a>
+// Prepend a list to a nonempty list.
+pub fun list/prepend(xs : list<a>, ne : nonempty<a>) : nonempty<a>
   match xs
     Nil -> ne
-    Cons(x, xx) -> Non-empty(x, xx ++ ne.tail)
+    Cons(x, xx) -> Nonempty(x, xx ++ ne.list)
 
-// Concatenate a non-empty list of non-empty lists.
-pub fun concat(nes : non-empty<non-empty<a>>) : non-empty<a>
-  Non-empty( head = nes.head.head
+// Concatenate a nonempty list of nonempty lists.
+pub fun concat(nes : nonempty<nonempty<a>>) : nonempty<a>
+  Nonempty( head = nes.head.head
            , tail = nes.head.tail ++ nes.tail.map(_.list).concat)
 
-// Concatenate a list of non-empty lists into a regular list.
-pub fun list/concat(nes : list<non-empty<a>>) : list<a>
+// Concatenate a list of nonempty lists into a regular list.
+pub fun list/concat(nes : list<nonempty<a>>) : list<a>
   nes.map(_.list).concat
 
 // Append an element to a list.
@@ -204,86 +204,86 @@ pub fun list/snoc(xs : list<a>, x : a) : list<a>
   xs ++ [x]
 
 // Take first n elements as a regular list.
-pub fun take(ne : non-empty<a>, n : int = ne.length) : list<a>
+pub fun take(ne : nonempty<a>, n : int = ne.length) : list<a>
   ne.list.take(n)
 
 // Drop first n elements as a regular list.
-pub fun drop(ne : non-empty<a>, n : int = ne.length) : list<a>
+pub fun drop(ne : nonempty<a>, n : int = ne.length) : list<a>
   ne.list.drop(n)
 
 // Split at index n into (prefix, suffix) as regular lists.
-pub fun split(ne : non-empty<a>, n : int) : (list<a>, list<a>)
+pub fun split(ne : nonempty<a>, n : int) : (list<a>, list<a>)
   ne.list.split(n)
 
 // Take elements while predicate holds.
-pub fun take-while(ne : non-empty<a>, pred : a -> e bool) : e list<a>
+pub fun take-while(ne : nonempty<a>, pred : a -> e bool) : e list<a>
   ne.list.take-while(pred)
 
 // Drop elements while predicate holds.
-pub fun drop-while(ne : non-empty<a>, pred : a -> e bool) : e list<a>
+pub fun drop-while(ne : nonempty<a>, pred : a -> e bool) : e list<a>
   ne.list.drop-while(pred)
 
 // Split into (longest prefix where pred holds, remainder).
-pub fun span(ne : non-empty<a>, pred : a -> e bool) : e (list<a>, list<a>)
+pub fun span(ne : nonempty<a>, pred : a -> e bool) : e (list<a>, list<a>)
   ne.list.span(pred)
 
 // Filter elements by predicate, returning a regular list (may be empty).
-pub fun filter(ne : non-empty<a>, pred : a -> e bool) : e list<a>
+pub fun filter(ne : nonempty<a>, pred : a -> e bool) : e list<a>
   ne.list.filter(pred)
 
 // Map to maybe and collect Just values, returning a regular list.
-pub fun filter-map(ne : non-empty<a>, pred : a -> e maybe<b>) : e list<b>
+pub fun filter-map(ne : nonempty<a>, pred : a -> e maybe<b>) : e list<b>
   ne.list.filter-map(pred)
 
 // True if all elements satisfy predicate.
-pub fun all(ne : non-empty<a>, pred : a -> e bool) : e bool
+pub fun all(ne : nonempty<a>, pred : a -> e bool) : e bool
   ne.map(pred).foldl(True, _&&_)
 
 // True if any element satisfies predicate.
-pub fun any(ne : non-empty<a>, pred : a -> e bool) : e bool
+pub fun any(ne : nonempty<a>, pred : a -> e bool) : e bool
   ne.map(pred).foldl(False, _||_)
 
 // Find first element satisfying predicate.
-pub fun find(ne : non-empty<a>, pred : a -> e bool) : e maybe<a>
+pub fun find(ne : nonempty<a>, pred : a -> e bool) : e maybe<a>
   ne.list.find(pred)
 
 // Find first Just result of mapping predicate.
-pub fun find-maybe(ne : non-empty<a>, pred : a -> e maybe<b>) : e maybe<b>
+pub fun find-maybe(ne : nonempty<a>, pred : a -> e maybe<b>) : e maybe<b>
   ne.list.find-maybe(pred)
 
 // Index of first element satisfying predicate, or -1.
-pub fun index-of(ne : non-empty<a>, pred : a -> e bool) : e int
+pub fun index-of(ne : nonempty<a>, pred : a -> e bool) : e int
   ne.list.index-of(pred)
 
 // Check if element exists (uses equality).
-pub fun contains(ne : non-empty<a>, x : a, ?(==) : (a, a) -> bool) : bool
+pub fun contains(ne : nonempty<a>, x : a, ?(==) : (a, a) -> bool) : bool
   ne.list.contains(x)
 
-// Flatmap: map to non-empty and concatenate.
-pub fun flatmap(ne : non-empty<a>, f : a -> e non-empty<b>) : e non-empty<b>
+// Flatmap: map to nonempty and concatenate.
+pub fun flatmap(ne : nonempty<a>, f : a -> e nonempty<b>) : e nonempty<b>
   ne.map(f).concat
 
 // Flatmap to maybe and collect Just values into a regular list.
-pub fun flatmap-maybe(ne : non-empty<a>, f : a -> e maybe<b>) : e list<b>
+pub fun flatmap-maybe(ne : nonempty<a>, f : a -> e maybe<b>) : e list<b>
   ne.list.flatmap-maybe(f)
 
 // Intersperse an element between all elements.
-pub fun intersperse(ne : non-empty<a>, a : a) : non-empty<a>
+pub fun intersperse(ne : nonempty<a>, a : a) : nonempty<a>
   ne(tail=a.Cons(ne.tail.intersperse(a)))
 
-// Reverse the non-empty list.
-pub fun reverse(ne : non-empty<a>) : non-empty<a>
-  ne.list.reverse.non-empty.default(ne)
+// Reverse the nonempty list.
+pub fun reverse(ne : nonempty<a>) : nonempty<a>
+  ne.list.reverse.nonempty.default(ne)
 
 // Sort using comparison function.
-pub fun sort(ne : non-empty<a>, ?cmp : (a, a) -> e order) : e non-empty<a>
+pub fun sort(ne : nonempty<a>, ?cmp : (a, a) -> e order) : e nonempty<a>
   match ne
-    Non-empty(x, xs) ->
+    Nonempty(x, xs) ->
       val sorted = insert(x, xs.sort)
-      sorted.non-empty.default(ne)
+      sorted.nonempty.default(ne)
 
 // Sort by key function.
-pub fun on/sort(ne : non-empty<a>, f : a -> e b, ?cmp : (b, b) -> e order) : e non-empty<a>
+pub fun on/sort(ne : nonempty<a>, f : a -> e b, ?cmp : (b, b) -> e order) : e nonempty<a>
   ne.sort fn(x, y) cmp(f(x), f(y))
 
 // List insert for sorting.
@@ -306,65 +306,65 @@ pub fun list/on/sort(xs : list<a>, f : a -> e b, ?cmp : (b, b) -> e order) : e l
   xs.sort fn(x, y) cmp(f(x), f(y))
 
 // Lexicographic comparison.
-pub fun cmp(n : non-empty<a>, m : non-empty<a>, ?cmp : (a, a) -> e order) : e order
+pub fun cmp(n : nonempty<a>, m : nonempty<a>, ?cmp : (a, a) -> e order) : e order
   cmp(n.list, m.list)
 
 // Maximum element (for int).
-pub fun maximum(ne : non-empty<int>) : int
+pub fun maximum(ne : nonempty<int>) : int
   ne.tail.maximum(ne.head)
 
 // Minimum element (for int).
-pub fun minimum(ne : non-empty<int>) : int
+pub fun minimum(ne : nonempty<int>) : int
   ne.tail.minimum(ne.head)
 
 // Maximum element using custom comparison.
-pub fun default/maximum(ne : non-empty<a>, ?cmp : (a, a) -> e order) : e a
+pub fun default/maximum(ne : nonempty<a>, ?cmp : (a, a) -> e order) : e a
   ne.sort.last
 
 // Minimum element using custom comparison.
-pub fun default/minimum(ne : non-empty<a>, ?cmp : (a, a) -> e order) : e a
+pub fun default/minimum(ne : nonempty<a>, ?cmp : (a, a) -> e order) : e a
   ne.sort.head
 
 // Sum of elements (requires +).
-pub fun sum(ne : non-empty<a>, ?(+) : (a, a) -> e a) : e a
+pub fun sum(ne : nonempty<a>, ?(+) : (a, a) -> e a) : e a
   ne.tail.foldl(ne.head, _+_)
 
 // Product of elements (requires *).
-pub fun product(ne : non-empty<a>, ?(*) : (a, a) -> e a) : e a
+pub fun product(ne : nonempty<a>, ?(*) : (a, a) -> e a) : e a
   ne.tail.foldl(ne.head, _*_)
 
-// Zip two non-empty lists element-wise. Truncates to shorter length.
-pub fun zip(n : non-empty<a>, m : non-empty<b>) : non-empty<(a, b)>
-  Non-empty( head =    (n.head, m.head)
+// Zip two nonempty lists element-wise. Truncates to shorter length.
+pub fun zip(n : nonempty<a>, m : nonempty<b>) : nonempty<(a, b)>
+  Nonempty( head =    (n.head, m.head)
            , tail = zip(n.tail, m.tail))
 
-// Unzip a non-empty list of pairs.
-pub fun unzip(ne : non-empty<(a, b)>) : (non-empty<a>, non-empty<b>)
-  ( Non-empty(ne.head.fst, ne.tail.unzip.fst)
-  , Non-empty(ne.head.snd, ne.tail.unzip.snd)
+// Unzip a nonempty list of pairs.
+pub fun unzip(ne : nonempty<(a, b)>) : (nonempty<a>, nonempty<b>)
+  ( Nonempty(ne.head.fst, ne.tail.unzip.fst)
+  , Nonempty(ne.head.snd, ne.tail.unzip.snd)
   )
 
 // Zip with a combining function.
-pub fun zip-with(n : non-empty<a>, m : non-empty<b>, f : (a, b) -> e c) : e non-empty<c>
-  Non-empty( head =       f(n.head, m.head)
+pub fun zip-with(n : nonempty<a>, m : nonempty<b>, f : (a, b) -> e c) : e nonempty<c>
+  Nonempty( head =       f(n.head, m.head)
            , tail = zipWith(n.tail, m.tail, f))
 
-// Convert a list to non-empty, returning Nothing if empty.
-pub fun list/non-empty(xs : list<a>) : maybe<non-empty<a>>
+// Convert a list to nonempty, returning Nothing if empty.
+pub fun list/nonempty(xs : list<a>) : maybe<nonempty<a>>
   match xs
     Nil -> Nothing
-    Cons(x, xx) -> Just(Non-empty(x, xx))
+    Cons(x, xx) -> Just(Nonempty(x, xx))
 
-// Convert a list to non-empty, raising an exception if empty.
-pub fun list/exn/non-empty'(xs : list<a>) : exn non-empty<a>
-  xs.non-empty.expect("non-empty: unexpected empty list")
+// Convert a list to nonempty, raising an exception if empty.
+pub fun list/exn/nonempty'(xs : list<a>) : exn nonempty<a>
+  xs.nonempty.expect("nonempty: unexpected empty list")
 
-// Unfold a non-empty list from a seed.
+// Unfold a nonempty list from a seed.
 // Function returns (element, maybe next-seed). Nothing terminates.
-pub fun unfoldr(x : b, f : b -> <div|e> (a, maybe<b>)) : <div|e> non-empty<a>
+pub fun unfoldr(x : b, f : b -> <div|e> (a, maybe<b>)) : <div|e> nonempty<a>
   match f(x)
     (a, Nothing) -> single(a)
-    (a, Just(b)) -> Non-empty(a, unfoldr(b, f).list)
+    (a, Just(b)) -> Nonempty(a, unfoldr(b, f).list)
 
 // List variant of unfoldr.
 pub fun list/unfoldr(x : b, f : b -> <div|e> maybe2<a, b>) : <div|e> list<a>
@@ -372,12 +372,12 @@ pub fun list/unfoldr(x : b, f : b -> <div|e> maybe2<a, b>) : <div|e> list<a>
     Nothing2    -> []
     Just2(a, b) -> Cons(a, unfoldr(b, f))
 
-// Lookup value by key predicate in a non-empty list of pairs.
-pub fun lookup(ne : non-empty<(k, v)>, pred : k -> e bool) : e maybe<v>
+// Lookup value by key predicate in a nonempty list of pairs.
+pub fun lookup(ne : nonempty<(k, v)>, pred : k -> e bool) : e maybe<v>
   ne.list.lookup(pred)
 
 // Join string elements with a separator appended after each.
-pub fun join-end(ne : non-empty<string>, end : string) : string
+pub fun join-end(ne : nonempty<string>, end : string) : string
   ne.head ++ end ++ ne.tail.join-end(end)
 
 // Entry point.
