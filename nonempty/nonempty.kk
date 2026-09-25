@@ -79,7 +79,7 @@ pub fun (==)(x : nonempty<a>, y : nonempty<a>, ?a/(==) : (a, a) -> bool)
 
 // Show instance.
 pub fun show(no__derived_show : nonempty<a>, ?a/show : a -> string)
-  "nonempty("
+  "Nonempty("
   ++ "head=" ++ no__derived_show.head.show ++ ", "
   ++ "tail=" ++ no__derived_show.tail.show()
   ++ ")"
