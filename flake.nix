@@ -17,42 +17,66 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         koka = pkgs.koka;
-        kokaVersion = "3.2.9";
+
+        # Derive dari paket koka itu sendiri, jangan hardcode angka versi
+        # supaya tidak drift saat nixpkgs update koka.
+        kokaVersion = koka.version;
 
         # Build the non-empty library
         nonEmptyLib = pkgs.stdenv.mkDerivation {
           pname = "koka-non-empty";
-          version = "0.1.0";
+          version = "0.1.1";
 
-          src = self;
+          src = pkgs.lib.cleanSource self;
 
           nativeBuildInputs = [
             koka
-            pkgs.makeWrapper
           ];
 
           buildPhase = ''
+            runHook preBuild
+
             # Set up koka environment
             export KOKA_PATH="${koka}/share/koka/${kokaVersion}"
 
             # Build the library with --target=c to generate library files
             ${koka}/bin/koka -l --target=c \
-              --builddir="''${PWD}/.koka-build" \
+              --builddir="$PWD/.koka-build" \
               --output=nonempty \
               nonempty/nonempty.kk
+
+            runHook postBuild
           '';
 
           installPhase = ''
+            runHook preInstall
+
             mkdir -p $out/share/koka/${kokaVersion}
             mkdir -p $out/lib/koka/${kokaVersion}/nonempty
 
             # Copy source .kk file to share (at top level for module resolution)
             cp nonempty/nonempty.kk $out/share/koka/${kokaVersion}/nonempty.kk
 
-            # Copy .c, .h, .o files (implementation) - these go to lib
-            cp -r .koka-build/v${kokaVersion}/*/nonempty*.c $out/lib/koka/${kokaVersion}/nonempty/ 2>/dev/null || true
-            cp -r .koka-build/v${kokaVersion}/*/nonempty*.h $out/lib/koka/${kokaVersion}/nonempty/ 2>/dev/null || true
-            cp -r .koka-build/v${kokaVersion}/*/nonempty*.o $out/lib/koka/${kokaVersion}/nonempty/ 2>/dev/null || true
+            # Cari file hasil generate koka lewat `find` alih-alih menebak
+            # kedalaman/nama persis direktori build internalnya (rawan
+            # berubah antar versi koka, dan kalau ditebak salah sebelumnya
+            # error-nya ditelan diam-diam oleh `|| true`).
+            c_files=$(find .koka-build -type f -name 'nonempty*.c')
+            h_files=$(find .koka-build -type f -name 'nonempty*.h')
+            o_files=$(find .koka-build -type f -name 'nonempty*.o')
+
+            if [ -z "$c_files" ]; then
+              echo "ERROR: tidak menemukan nonempty*.c di bawah .koka-build" >&2
+              echo "Isi .koka-build saat ini:" >&2
+              find .koka-build >&2
+              exit 1
+            fi
+
+            cp $c_files $out/lib/koka/${kokaVersion}/nonempty/
+            [ -n "$h_files" ] && cp $h_files $out/lib/koka/${kokaVersion}/nonempty/
+            [ -n "$o_files" ] && cp $o_files $out/lib/koka/${kokaVersion}/nonempty/
+
+            runHook postInstall
           '';
         };
 
@@ -61,16 +85,17 @@
         devShells.default = pkgs.mkShell {
           packages = [
             koka
-            nonEmptyLib
+            # nonEmptyLib
           ];
-          shellHook = ''
-            export KOKA_PATH="${koka}/share/koka/${kokaVersion}:${nonEmptyLib}/share/koka/${kokaVersion}"
-            echo "Koka non-empty library available at: ${nonEmptyLib}"
-            echo "Use -i ${nonEmptyLib}/share/koka/${kokaVersion} to include nonempty in your project"
-          '';
+          # shellHook = ''
+          #   export KOKA_PATH="${koka}/share/koka/${kokaVersion}:${nonEmptyLib}/share/koka/${kokaVersion}"
+          #   echo "Koka non-empty library available at: ${nonEmptyLib}"
+          #   echo "Use -i ${nonEmptyLib}/share/koka/${kokaVersion} to include nonempty in your project"
+          # '';
         };
 
         packages.nonEmptyLib = nonEmptyLib;
+        packages.default = nonEmptyLib;
 
         # Provide library info for other flakes to consume
         kokaLibraries.nonempty = {
