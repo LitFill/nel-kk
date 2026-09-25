@@ -1,1 +1,37 @@
+# Koka build output
 .koka/
+
+# Nix
+result
+result-*
+
+# Vendored dependencies
+vendor/
+
+# Test projects
+test_proj/
+
+# Test files
+nonempty/simple_test.kk
+nonempty/test_*.kk
+test_*.kk
+
+# Koka compiled artifacts
+*.o
+*.c
+*.h
+*.kki
+
+# Compiled executables (no extension)
+utils
+testutils
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
