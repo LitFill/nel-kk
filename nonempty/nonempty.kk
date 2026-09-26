@@ -22,10 +22,10 @@ pub fun (<::)(x, ne) cons(x, ne)
 pub fun list(ne : nonempty<a>) : list<a>
   Cons(ne.head, ne.tail)
 
-/// Convert a maybe nonempty to a regular list (empty if Nothing).
+// Convert a maybe nonempty to a regular list (empty if Nothing).
 pub fun maybe/list(mne : maybe<nonempty<a>>) : list<a>
   match mne
-    Nothing -> []
+    Nothing  -> []
     Just(ne) -> ne.list
 
 // Number of elements. Always at least 1.
@@ -43,17 +43,17 @@ pub fun init(ne : nonempty<a>) : list<a>
 // Split a list into (init, last) or Nothing if empty.
 pub fun list/unsnoc(xs : list<a>) : maybe<(list<a>, a)>
   match xs
-    Nil -> Nothing
+    Nil         -> Nothing
     Cons(x, xx) -> match xx.unsnoc
-      Nothing -> Just((Nil, x))
+      Nothing       -> Just((Nil, x))
       Just((ys, y)) -> Just((Cons(x, ys), y))
 
 // Split a list into (init, last) using maybe2.
 pub fun list/unsnoc'(xs : list<a>) : maybe2<list<a>, a>
   match xs
-    Nil -> Nothing2
+    Nil         -> Nothing2
     Cons(x, xx) -> match xx.unsnoc'
-      Nothing2 -> Just2(Nil, x)
+      Nothing2     -> Just2(Nil, x)
       Just2(ys, y) -> Just2(Cons(x, ys), y)
 
 // Deconstruct into head and optional tail as nonempty.
@@ -65,7 +65,7 @@ pub fun uncons(ne : nonempty<a>) : (a, maybe<nonempty<a>>)
 // Returns (Nothing, last) for single-element, else (Just(init), last).
 pub fun unsnoc(ne : nonempty<a>) : (maybe<list<a>>, a)
   match ne.tail.unsnoc
-    Nothing -> (Nothing, ne.head)
+    Nothing       -> (Nothing, ne.head)
     Just((xs, x)) -> (ne.head.Cons(xs).Just, x)
 
 // Structural equality.
@@ -91,7 +91,7 @@ pub fun map(ne : nonempty<a>, f : a -> e b) : e nonempty<b>
 // Map a function over all elements with their index.
 pub fun map-indexed(ne : nonempty<a>, f : (ix : int, x : a) -> e b) : e nonempty<b>
   Nonempty( head = f(0, ne.head)
-           , tail = ne.tail.map-indexed fn(i, x) f(i + 1, x))
+          , tail = ne.tail.map-indexed fn(i, x) f(i + 1, x))
 
 // Left fold with initial accumulator.
 pub fun foldl(ne : nonempty<a>, z : b, f : (b, a) -> e b) : e b
@@ -187,13 +187,13 @@ pub fun (++)(n : nonempty<a>, m : nonempty<a>) : nonempty<a>
 // Prepend a list to a nonempty list.
 pub fun list/prepend(xs : list<a>, ne : nonempty<a>) : nonempty<a>
   match xs
-    Nil -> ne
+    Nil         -> ne
     Cons(x, xx) -> Nonempty(x, xx ++ ne.list)
 
 // Concatenate a nonempty list of nonempty lists.
 pub fun concat(nes : nonempty<nonempty<a>>) : nonempty<a>
   Nonempty( head = nes.head.head
-           , tail = nes.head.tail ++ nes.tail.map(_.list).concat)
+          , tail = nes.head.tail ++ nes.tail.map(_.list).concat)
 
 // Concatenate a list of nonempty lists into a regular list.
 pub fun list/concat(nes : list<nonempty<a>>) : list<a>
@@ -269,7 +269,12 @@ pub fun flatmap-maybe(ne : nonempty<a>, f : a -> e maybe<b>) : e list<b>
 
 // Intersperse an element between all elements.
 pub fun intersperse(ne : nonempty<a>, a : a) : nonempty<a>
-  ne(tail=a.Cons(ne.tail.intersperse(a)))
+  // Interspersing only the tail would drop the separator between the head and
+  // the first tail element, so the whole list is interspersed and re-wrapped.
+  // The result is nonempty because the input is.
+  match ne.list.intersperse(a)
+    Cons(x, xs) -> Nonempty(x, xs)
+    Nil         -> ne
 
 // Reverse the nonempty list.
 pub fun reverse(ne : nonempty<a>) : nonempty<a>
@@ -289,7 +294,7 @@ pub fun on/sort(ne : nonempty<a>, f : a -> e b, ?cmp : (b, b) -> e order) : e no
 // List insert for sorting.
 pub fun list/insert(x : a, xs : list<a>, ?cmp : (a, a) -> e order) : e list<a>
   match xs
-    [] -> [x]
+    []          -> [x]
     Cons(y, yy) ->
       if x <= y
       then Cons(x, Cons(y, yy))
@@ -299,7 +304,7 @@ pub fun list/insert(x : a, xs : list<a>, ?cmp : (a, a) -> e order) : e list<a>
 pub fun list/sort(xs : list<a>, ?cmp : (a, a) -> e order) : e list<a>
   match xs
     Cons(x, xx) -> insert(x, xx.sort)
-    Nil -> Nil
+    Nil         -> Nil
 
 // List sort by key.
 pub fun list/on/sort(xs : list<a>, f : a -> e b, ?cmp : (b, b) -> e order) : e list<a>
@@ -336,7 +341,7 @@ pub fun product(ne : nonempty<a>, ?(*) : (a, a) -> e a) : e a
 // Zip two nonempty lists element-wise. Truncates to shorter length.
 pub fun zip(n : nonempty<a>, m : nonempty<b>) : nonempty<(a, b)>
   Nonempty( head =    (n.head, m.head)
-           , tail = zip(n.tail, m.tail))
+          , tail = zip(n.tail, m.tail))
 
 // Unzip a nonempty list of pairs.
 pub fun unzip(ne : nonempty<(a, b)>) : (nonempty<a>, nonempty<b>)
@@ -347,12 +352,12 @@ pub fun unzip(ne : nonempty<(a, b)>) : (nonempty<a>, nonempty<b>)
 // Zip with a combining function.
 pub fun zip-with(n : nonempty<a>, m : nonempty<b>, f : (a, b) -> e c) : e nonempty<c>
   Nonempty( head =       f(n.head, m.head)
-           , tail = zipWith(n.tail, m.tail, f))
+          , tail = zipWith(n.tail, m.tail, f))
 
 // Convert a list to nonempty, returning Nothing if empty.
 pub fun list/nonempty(xs : list<a>) : maybe<nonempty<a>>
   match xs
-    Nil -> Nothing
+    Nil         -> Nothing
     Cons(x, xx) -> Just(Nonempty(x, xx))
 
 // Convert a list to nonempty, raising an exception if empty.
@@ -380,6 +385,6 @@ pub fun lookup(ne : nonempty<(k, v)>, pred : k -> e bool) : e maybe<v>
 pub fun join-end(ne : nonempty<string>, end : string) : string
   ne.head ++ end ++ ne.tail.join-end(end)
 
-// Entry point.
+// Dummy entry point.
 fun main()
   "Hello, Koka!"

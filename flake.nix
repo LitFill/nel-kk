@@ -80,29 +80,70 @@
           '';
         };
 
+        # Test suite, built against the library produced above so that a
+        # regression cannot pass by accident.
+        testLib = pkgs.stdenv.mkDerivation {
+          pname = "nonempty-test";
+          version = nonEmptyLib.version;
+
+          src = pkgs.lib.cleanSource self;
+
+          nativeBuildInputs = [ koka ];
+
+          buildPhase = ''
+            runHook preBuild
+            koka -o nonempty-test \
+              --include="${nonEmptyLib}/share/koka/${kokaVersion}" \
+              --builddir="$PWD/.koka-build" \
+              nonempty/test.kk
+            runHook postBuild
+          '';
+
+          doCheck = true;
+          checkPhase = ''
+            runHook preCheck
+            ./nonempty-test
+            runHook postCheck
+          '';
+
+          installPhase = ''
+            runHook preInstall
+            mkdir -p "$out/bin"
+            cp nonempty-test "$out/bin/"
+            runHook postInstall
+          '';
+        };
       in
       {
+        # The dev shell builds the library and exposes it on the module search
+        # path. `KOKA_OPTIONS` is used rather than `KOKA_PATH`, because the
+        # compiler does not read `KOKA_PATH` when resolving user modules.
         devShells.default = pkgs.mkShell {
-          packages = [
-            koka
-            # nonEmptyLib
-          ];
-          # shellHook = ''
-          #   export KOKA_PATH="${koka}/share/koka/${kokaVersion}:${nonEmptyLib}/share/koka/${kokaVersion}"
-          #   echo "Koka non-empty library available at: ${nonEmptyLib}"
-          #   echo "Use -i ${nonEmptyLib}/share/koka/${kokaVersion} to include nonempty in your project"
-          # '';
+          packages = [ koka nonEmptyLib ];
+
+          shellHook = ''
+            export KOKA_OPTIONS="--include=${nonEmptyLib}/share/koka/${kokaVersion}"
+            printf '{"include_dirs":["%s"]}\n' \
+              "${nonEmptyLib}/share/koka/${kokaVersion}" > "$PWD/koka.json"
+            echo "nonempty ${nonEmptyLib.version} on module path; run: koka -o out nonempty/test.kk"
+          '';
         };
+
+        checks.tests = testLib;
+        checks.default = testLib;
 
         packages.nonEmptyLib = nonEmptyLib;
         packages.default = nonEmptyLib;
 
-        # Provide library info for other flakes to consume
+        # Library info for consuming flakes. `version` is the Koka version,
+        # which keys the share/ and lib/ paths; `libVersion` is this library's
+        # own version. Consumers must not hardcode either.
         kokaLibraries.nonempty = {
           path = nonEmptyLib;
           includePath = "${nonEmptyLib}/share/koka/${kokaVersion}";
           libPath = "${nonEmptyLib}/lib/koka/${kokaVersion}";
           version = kokaVersion;
+          libVersion = nonEmptyLib.version;
         };
       }
     );
