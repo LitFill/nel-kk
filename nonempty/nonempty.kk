@@ -281,7 +281,7 @@ pub fun intersperse(ne : nonempty<a>, a : a) : nonempty<a>
   // The result is nonempty because the input is.
   match ne.list.intersperse(a)
     Cons(x, xs) -> Nonempty(x, xs)
-    Nil         -> ne
+    Nil         -> ne           // basically never happens
 
 // Reverse the nonempty list.
 pub fun reverse(ne : nonempty<a>) : nonempty<a>
