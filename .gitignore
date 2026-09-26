@@ -22,6 +22,19 @@ test_*.kk
 *.h
 *.kki
 
+# Koka build dir / binaries
+build/
+my-app
+
+# Generated LSP config
+koka.json
+
+# Editor backups
+*.backup
+
+# Local scratch flakes (never pushed)
+testing-flake/
+
 # Compiled executables (no extension)
 utils
 testutils
