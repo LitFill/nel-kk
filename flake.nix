@@ -25,7 +25,7 @@
         # Build the non-empty library
         nonEmptyLib = pkgs.stdenv.mkDerivation {
           pname = "koka-non-empty";
-          version = "0.1.1";
+          version = "0.1.2";
 
           src = pkgs.lib.cleanSource self;
 
@@ -187,7 +187,6 @@
         # The docs derivation verifies every internal link it emits, so a
         # broken reference fails `nix flake check` like any other regression.
         checks.docs = docs;
-
 
         # Library info for consuming flakes. `version` is the Koka version,
         # which keys the share/ and lib/ paths; `libVersion` is this library's
