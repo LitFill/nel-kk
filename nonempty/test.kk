@@ -5,7 +5,7 @@ import nonempty
 // Every case below uses `assert`, which aborts the process on failure. Do not
 // replace these with `val _ =`, which discards the result and always passes.
 
-fun test-nonempty/single()
+fun test-one()
   val ne = nonempty/single(42)
   assert(r#"ne.head == 42"#, ne.head == 42)
   assert(r#"ne.tail == []"#, ne.tail == [])
@@ -27,7 +27,7 @@ fun test-list-conversion()
   assert(r#"maybe/list(Nothing) == []"#, fromNothing == [])
   assert(r#"maybe/list(Just(ne)) == [1, 2]"#, fromJust == [1, 2])
 
-fun test-nonempty-invariant()
+fun test-invariant()
   // The invariant must hold for every constructor, not just `single`.
   assert(r#"length(nonempty/single(0)) == 1"#, length(nonempty/single(0)) == 1)
   assert(r#"length(cons(0, nonempty/single(0))) == 2"#, length(cons(0, nonempty/single(0))) == 2)
@@ -209,10 +209,10 @@ fun test-init-last()
   assert(r#"init of single is empty"#, init(nonempty/single(1)) == [])
 
 fun main()
-  test-nonempty/single()
+  test-one()
   test-cons()
   test-list-conversion()
-  test-nonempty-invariant()
+  test-invariant()
   test-append()
   test-map()
   test-filter-may-empty()
