@@ -15,8 +15,15 @@ pub fun single(x) Nonempty(x, [])
 pub fun cons(x : a, ne : nonempty<a>) : nonempty<a>
   Nonempty(x, ne.list)
 
+pub fun list/cons(x : a, xs : list<a>) : nonempty<a>
+  Nonempty(x, xs)
+
 // Infix operator for prepending. Right-associative with precedence 5.
-pub fun (<::)(x, ne) cons(x, ne)
+pub fun (<::)(x : a, ne : nonempty<a>) : nonempty<a>
+  cons(x, ne)
+
+pub fun list/(<::)(x : a, xs : list<a>) : nonempty<a>
+  cons(x, xs)
 
 // Convert to a regular list.
 pub fun list(ne : nonempty<a>) : list<a>

@@ -140,12 +140,14 @@ pub fun cmp(n : nonempty<a>, m : nonempty<a>, ?cmp : (a, a) -> e order) : e orde
 
 ## Installation
 
-The flake exposes three outputs per system.
+The flake exposes four outputs per system.
 
 | Output                            | Purpose                                                                           |
 | --------------------------------- | --------------------------------------------------------------------------------- |
 | `packages.<system>.nonEmptyLib`   | The built library. Also aliased as `default`.                                     |
+| `packages.<system>.docs`          | The HTML API reference. See [API reference](#api-reference).                      |
 | `checks.<system>.tests`           | Builds and runs `nonempty/test.kk` against the library. Run by `nix flake check`. |
+| `checks.<system>.docs`            | Regenerates the reference and verifies every link in it.                          |
 | `kokaLibraries.<system>.nonempty` | Resolved paths, for consumption by other flakes.                                  |
 
 `packages` and `kokaLibraries` refer to the same derivation. Prefer
@@ -346,3 +348,46 @@ files with `find` rather than hardcoding a path, because the internal build
 directory layout is not stable across Koka versions. A `|| true` guard around
 that `find` is deliberately absent: a silent miss would otherwise produce a
 library that installs successfully and fails only at consumer link time.
+
+## API reference
+
+`docs/` holds the generated HTML reference: the compiler's `--html` output
+plus the site scaffolding around it. Open `docs/index.html` in a browser, or
+browse the API directly at `docs/nonempty_nonempty.html`.
+
+```bash
+nix build .#docs        # builds into the store
+scripts/build-docs.sh docs   # regenerates in place
+```
+
+Everything under `docs/` is generated. Edit `nonempty/nonempty.kk` — the doc
+comments there are what the reference renders — and re-run the script; do not
+edit the HTML.
+
+`scripts/build-docs.sh` runs `koka -l --html --target=c` and then repairs what
+the compiler leaves inconsistent:
+
+- Every page links to `toc.html` and `styles/koka.css`, and the compiler
+  writes neither. The script supplies them, plus an `index.html` landing page.
+- The compiler links to `<module>.html` but writes `<module>.xmp.html`; the
+  files are renamed on the way out so its own links resolve.
+- The API page and the annotated source page are generated separately and
+  disagree on some anchors. Cross-page links pointing at an anchor the target
+  page does not have are retargeted to the page that does.
+- Doc comments are wrapped in `<xmp>`, a deprecated element whose content the
+  browser never parses, yet the compiler puts real markup inside it. Any
+  comment with a code span escaped as literal `<code class="koka">…` on the
+  page — visible on the generated `nonempty/head` and `nonempty/tail`
+  projections, whose comments the compiler writes itself. The script strips
+  the `<xmp>` wrapper so the markup renders.
+- The compiler writes ~6 MB of `std/...` pages describing Koka itself. They are
+  left out; `--htmlbases` sends every standard library cross-reference to the
+  published Koka documentation instead.
+
+The last step in the script resolves every internal `href` on every page,
+anchors included, and fails the build if one does not resolve. That is what
+`checks.docs` runs, so a broken reference fails `nix flake check`.
+
+> [!NOTE]
+> The reference links to the published Koka documentation for `std/...` types.
+> `KOKA_DOC_BASE` overrides that base URL if the docs are self-hosted.

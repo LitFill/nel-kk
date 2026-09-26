@@ -113,6 +113,46 @@
             runHook postInstall
           '';
         };
+
+        # HTML API reference, produced by the Koka compiler's `--html` backend
+        # via scripts/build-docs.sh. That script is the single source of truth
+        # for the pipeline: it repairs the anchors the compiler splits across
+        # the API and source pages, and it fails the build if any internal
+        # link does not resolve.
+        docs = pkgs.stdenv.mkDerivation {
+          pname = "koka-non-empty-docs";
+          version = nonEmptyLib.version;
+
+          src = pkgs.lib.cleanSource self;
+
+          nativeBuildInputs = [
+            koka
+            pkgs.gnugrep
+          ];
+
+          dontConfigure = true;
+
+          buildPhase = ''
+            runHook preBuild
+
+            # Invoked through bash explicitly: the build sandbox has no
+            # /usr/bin/env for the script's shebang to resolve.
+            KOKA=${koka}/bin/koka bash scripts/build-docs.sh docs
+
+            runHook postBuild
+          '';
+
+          installPhase = ''
+            runHook preInstall
+            mkdir -p "$out"
+            cp -r docs/. "$out/"
+            runHook postInstall
+          '';
+
+          # Regenerating the reference is the common case, and it needs the
+          # sources, so build it here rather than on a remote builder.
+          preferLocalBuild = true;
+        };
       in
       {
         # The dev shell builds the library and exposes it on the module search
@@ -122,6 +162,9 @@
           packages = [
             koka
             nonEmptyLib
+            # scripts/build-docs.sh uses GNU grep; the stdenv does not always
+            # provide it.
+            pkgs.gnugrep
           ];
 
           shellHook = ''
@@ -129,6 +172,7 @@
             printf '{"include_dirs":["%s"]}\n' \
               "${nonEmptyLib}/share/koka/${kokaVersion}" > "$PWD/koka.json"
             echo "nonempty ${nonEmptyLib.version} on module path; run: koka -o out nonempty/test.kk"
+            echo "docs: scripts/build-docs.sh docs"
           '';
         };
 
@@ -137,6 +181,13 @@
 
         packages.nonEmptyLib = nonEmptyLib;
         packages.default = nonEmptyLib;
+
+        packages.docs = docs;
+
+        # The docs derivation verifies every internal link it emits, so a
+        # broken reference fails `nix flake check` like any other regression.
+        checks.docs = docs;
+
 
         # Library info for consuming flakes. `version` is the Koka version,
         # which keys the share/ and lib/ paths; `libVersion` is this library's
