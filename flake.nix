@@ -119,7 +119,10 @@
         # path. `KOKA_OPTIONS` is used rather than `KOKA_PATH`, because the
         # compiler does not read `KOKA_PATH` when resolving user modules.
         devShells.default = pkgs.mkShell {
-          packages = [ koka nonEmptyLib ];
+          packages = [
+            koka
+            nonEmptyLib
+          ];
 
           shellHook = ''
             export KOKA_OPTIONS="--include=${nonEmptyLib}/share/koka/${kokaVersion}"
