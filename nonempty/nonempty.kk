@@ -72,10 +72,10 @@ pub fun uncons(ne : nonempty<a>) : (a, maybe<nonempty<a>>)
 
 // Deconstruct into optional init and last.
 // Returns (Nothing, last) for single-element, else (Just(init), last).
-pub fun unsnoc(ne : nonempty<a>) : (maybe<list<a>>, a)
+pub fun unsnoc(ne : nonempty<a>) : (maybe<nonempty<a>>, a)
   match ne.tail.unsnoc
     Nothing       -> (Nothing, ne.head)
-    Just((xs, x)) -> (ne.head.Cons(xs).Just, x)
+    Just((xs, x)) -> (ne(tail=xs).Just, x)
 
 // Structural equality.
 pub fun eq(no__derived_eq_1 : nonempty<a>, no__derived_eq_2 : nonempty<a>, ?a/(==) : (a, a) -> bool)
