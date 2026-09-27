@@ -358,6 +358,12 @@ pub fun unzip(ne : nonempty<(a, b)>) : (nonempty<a>, nonempty<b>)
       ( Nonempty(x, xs)
       , Nonempty(y, ys))
 
+// Unzip a nonempty list of pairs.
+fun unzip'(Nonempty((x, y), ps) : nonempty<(a, b)>) : (nonempty<a>, nonempty<b>)
+  val (xs, ys) = ps.unzip
+  ( Nonempty(x, xs)
+  , Nonempty(y, ys))
+
 // Zip with a combining function.
 pub fun zip-with(n : nonempty<a>, m : nonempty<b>, f : (a, b) -> e c) : e nonempty<c>
   Nonempty( head =       f(n.head, m.head)
