@@ -31,10 +31,10 @@ return a weaker type — <code>list&lt;a&gt;</code> or <code>maybe&lt;nonempty&l
 
 <span class="kw">import</span> nonempty
 
-<span class="kw">fun</span> <span class="lq">main</span>() : <span class="tp">io</span> <span class="tp sp">()</span>
-  <span class="kw">val</span> xs = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>].<span class="lq">nonempty</span>.<span class="lq">default</span>(<span class="number">0</span>.<span class="lq">single</span>)
-  xs.<span class="lq">length</span>.<span class="lq">println</span>
-  xs.<span class="lq">map</span>(<span class="kw">fn</span>(i) i * <span class="number">2</span>).<span class="lq">list</span>.<span class="lq">println</span></pre>
+<span class="kw">fun</span> <span class="lq">main</span>() : <span class="tp">console</span> <span class="tp sp">()</span>
+  <span class="kw">val</span> nel : <span class="tp">nonempty</span><span class="tp sp">&lt;</span><span class="tp">int</span><span class="tp sp">&gt;</span> = <span class="number">1</span> <span class="op">&lt;::</span> <span class="number">2</span> <span class="op">&lt;::</span> [<span class="number">3</span>]
+  nel.<span class="lq">length</span>.<span class="lq">println</span>
+  nel.<span class="lq">map</span>(<span class="kw">fn</span>(i) i * <span class="number">2</span>).<span class="lq">list</span>.<span class="lq">println</span></pre>
 
 <p>Prints <code>3</code> and <code>[2,4,6]</code>.</p>
 
