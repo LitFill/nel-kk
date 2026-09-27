@@ -15,6 +15,7 @@ pub fun single(x) Nonempty(x, [])
 pub fun cons(x : a, ne : nonempty<a>) : nonempty<a>
   Nonempty(x, ne.list)
 
+// Alias for `con Nonempty`
 pub fun list/cons(x : a, xs : list<a>) : nonempty<a>
   Nonempty(x, xs)
 
@@ -22,6 +23,7 @@ pub fun list/cons(x : a, xs : list<a>) : nonempty<a>
 pub fun (<::)(x : a, ne : nonempty<a>) : nonempty<a>
   cons(x, ne)
 
+// Infix version of `list/cons`
 pub fun list/(<::)(x : a, xs : list<a>) : nonempty<a>
   cons(x, xs)
 
