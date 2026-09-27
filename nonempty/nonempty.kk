@@ -202,7 +202,7 @@ pub fun list/prepend(xs : list<a>, ne : nonempty<a>) : nonempty<a>
 // Concatenate a nonempty list of nonempty lists.
 pub fun concat(nes : nonempty<nonempty<a>>) : nonempty<a>
   Nonempty( head = nes.head.head
-          , tail = nes.head.tail ++ nes.tail.map(_.list).concat)
+          , tail = Cons(nes.head.tail, nes.tail.map(_.list)).concat)
 
 // Concatenate a list of nonempty lists into a regular list.
 pub fun list/concat(nes : list<nonempty<a>>) : list<a>
