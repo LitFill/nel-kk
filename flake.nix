@@ -25,7 +25,7 @@
         # Build the non-empty library
         nonEmptyLib = pkgs.stdenv.mkDerivation {
           pname = "koka-non-empty";
-          version = "0.1.2";
+          version = "0.2.0";
 
           src = pkgs.lib.cleanSource self;
 
