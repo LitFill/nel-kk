@@ -291,28 +291,35 @@ pub fun reverse(ne : nonempty<a>) : nonempty<a>
 
 // Sort using comparison function.
 pub fun sort(ne : nonempty<a>, ?cmp : (a, a) -> e order) : e nonempty<a>
+  ne.tail.foldl(single(ne.head)) fn(ne', x)
+    ne'.insert(x)
+
+// Nonempty insert for sorting.
+pub fun insert(ne : nonempty<a>, x : a, ?cmp : (a, a) -> e order) : e nonempty<a>
   match ne
-    Nonempty(x, xs) ->
-      val sorted = insert(x, xs.sort)
-      sorted.nonempty.default(ne)
+    Nonempty(y, ys) ->
+      if x < y then
+        Nonempty(x, Cons(y, ys))
+      else
+        Nonempty(y, ys.insert(x))
 
 // Sort by key function.
 pub fun on/sort(ne : nonempty<a>, f : a -> e b, ?cmp : (b, b) -> e order) : e nonempty<a>
   ne.sort fn(x, y) cmp(f(x), f(y))
 
 // List insert for sorting.
-pub fun list/insert(x : a, xs : list<a>, ?cmp : (a, a) -> e order) : e list<a>
+pub fun list/insert(xs : list<a>, x : a, ?cmp : (a, a) -> e order) : e list<a>
   match xs
     []          -> [x]
     Cons(y, yy) ->
       if x <= y
       then Cons(x, Cons(y, yy))
-      else Cons(y, insert(x, yy))
+      else Cons(y, yy.insert(x))
 
 // List sort.
 pub fun list/sort(xs : list<a>, ?cmp : (a, a) -> e order) : e list<a>
   match xs
-    Cons(x, xx) -> insert(x, xx.sort)
+    Cons(x, xx) -> xx.sort.insert(x)
     Nil         -> Nil
 
 // List sort by key.
